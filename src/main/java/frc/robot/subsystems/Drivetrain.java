@@ -4,8 +4,12 @@
 
 package frc.robot.subsystems;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.util.ReplanningConfig;
+
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.xrp.XRPGyro;
@@ -13,8 +17,7 @@ import edu.wpi.first.wpilibj.xrp.XRPMotor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
-  private static final double kGearRatio =
-      (30.0 / 14.0) * (28.0 / 16.0) * (36.0 / 9.0) * (26.0 / 8.0); // 48.75:1
+  private static final double kGearRatio = (30.0 / 14.0) * (28.0 / 16.0) * (36.0 / 9.0) * (26.0 / 8.0); // 48.75:1
   private static final double kCountsPerMotorShaftRev = 12.0;
   private static final double kCountsPerRevolution = kCountsPerMotorShaftRev * kGearRatio; // 585.0
   private static final double kWheelDiameterInch = 2.3622; // 60 mm
@@ -30,8 +33,7 @@ public class Drivetrain extends SubsystemBase {
   private final Encoder m_rightEncoder = new Encoder(6, 7);
 
   // Set up the differential drive controller
-  private final DifferentialDrive m_diffDrive =
-      new DifferentialDrive(m_leftMotor::set, m_rightMotor::set);
+  private final DifferentialDrive m_diffDrive = new DifferentialDrive(m_leftMotor::set, m_rightMotor::set);
 
   // Set up the XRPGyro
   private final XRPGyro m_gyro = new XRPGyro();
@@ -146,5 +148,36 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+  }
+
+  public class DriveSubsystem extends SubsystemBase {
+    public DriveSubsystem() {
+      // All other subsystem initialization
+      // ...
+
+      // Configure AutoBuilder last
+      AutoBuilder.configureLTV(
+          this::getPose, // Robot pose supplier
+          this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+          this::getCurrentSpeeds, // Current ChassisSpeeds supplier
+          this::drive, // Method that will drive the robot given ChassisSpeeds
+          0.02, // Robot control loop period in seconds. Default is 0.02
+          new ReplanningConfig(), // Default path replanning config. See the API for the options here
+          () -> {
+            // Boolean supplier that controls when the path will be mirrored for the red
+            // alliance
+            // This will flip the path being followed to the red side of the field.
+            // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+            var alliance = DriverStation.getAlliance();
+            if (alliance.isPresent()) {
+              return alliance.get() == DriverStation.Alliance.Red;
+            }
+            return false;
+          },
+          this // Reference to this subsystem to set requirements
+      );
+
+    }
   }
 }

@@ -181,19 +181,23 @@ public class Drivetrain extends SubsystemBase {
   // Returns the current pose as a Pose2d
   Pose2d robotpose = new Pose2d();
 
+  // Returns Pose2d of the robot
   public Pose2d getPose() {
     return robotpose;
   }
 
+  // Resets Pose2d of the robot
   public Pose2d resetPose(Pose2d pose) {
     robotpose = new Pose2d();
     return robotpose;
   }
 
+  // Method that will drive the robot given ChassisSpeeds
   private void driveChassisSpeed(ChassisSpeeds chassisSpeeds) {
     arcadeDrive(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond);
   }
 
+  // Current ChassisSpeeds supplier
   private ChassisSpeeds getAccelXPath() {
     return new ChassisSpeeds(getAccelX(), 0, 0);
   }

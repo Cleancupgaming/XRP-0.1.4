@@ -100,8 +100,10 @@ public class RobotContainer {
   }
 
     public Command getAutonomousCommand() {
-    return new PathPlannerAuto("Example Path");
+    return new PathPlannerAuto("Pickle");
   }
+
+
 }
 
 

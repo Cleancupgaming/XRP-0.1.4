@@ -8,6 +8,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -20,6 +21,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 
 public class Drivetrain extends SubsystemBase {
   private static final double kGearRatio = (30.0 / 14.0) * (28.0 / 16.0) * (36.0 / 9.0) * (26.0 / 8.0); // 48.75:1
@@ -78,6 +80,7 @@ public class Drivetrain extends SubsystemBase {
           if (alliance.isPresent()) {
             return alliance.get() == DriverStation.Alliance.Red;
           }
+          System.out.println("False");
           return false;
         },
         this // Reference to this subsystem to set requirements
@@ -192,9 +195,14 @@ public class Drivetrain extends SubsystemBase {
     return robotpose;
   }
 
-  // Method that will drive the robot given ChassisSpeeds
+  // Creating my kinematics object: track width of 27 inches
+  DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(1.0);
+
   private void driveChassisSpeed(ChassisSpeeds chassisSpeeds) {
-    arcadeDrive(chassisSpeeds.vxMetersPerSecond, chassisSpeeds.omegaRadiansPerSecond);
+    DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(chassisSpeeds);
+    
+    m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
+    m_rightMotor.set(wheelSpeeds.rightMetersPerSecond);
   }
 
   // Current ChassisSpeeds supplier

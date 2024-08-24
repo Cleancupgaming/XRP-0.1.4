@@ -5,6 +5,14 @@
       "/SmartDashboard/SendableChooser[0]": "String Chooser"
     }
   },
+  "NetworkTables": {
+    "Retained Values": {
+      "open": false
+    },
+    "Transitory Values": {
+      "open": false
+    }
+  },
   "NetworkTables Info": {
     "visible": true
   }

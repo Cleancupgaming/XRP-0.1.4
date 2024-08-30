@@ -196,13 +196,16 @@ public class Drivetrain extends SubsystemBase {
   }
 
   // Creating my kinematics object: track width of 27 inches
-  DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(1.0);
+  DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.4148667);
 
   private void driveChassisSpeed(ChassisSpeeds chassisSpeeds) {
     DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(chassisSpeeds);
+    // arcadeDrive(chassisSpeeds.vxMetersPerSecond,
     
+    // chassisSpeeds.omegaRadiansPerSecond);
     m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
     m_rightMotor.set(wheelSpeeds.rightMetersPerSecond);
+    
   }
 
   // Current ChassisSpeeds supplier

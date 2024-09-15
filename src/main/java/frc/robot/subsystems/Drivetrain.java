@@ -179,6 +179,7 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    
   }
 
   // Returns the current pose as a Pose2d
@@ -201,9 +202,9 @@ public class Drivetrain extends SubsystemBase {
   private void driveChassisSpeed(ChassisSpeeds pathPlannerChassisSpeedsIn) {
     DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.4148667);
     DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(pathPlannerChassisSpeedsIn);
-    // arcadeDrive(chassisSpeeds.vxMetersPerSecond,
     
-    // chassisSpeeds.omegaRadiansPerSecond);
+    
+    
 
     m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
     m_rightMotor.set(wheelSpeeds.rightMetersPerSecond);

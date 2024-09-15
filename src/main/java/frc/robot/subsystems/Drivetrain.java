@@ -18,12 +18,14 @@ import edu.wpi.first.wpilibj.xrp.XRPGyro;
 import edu.wpi.first.wpilibj.xrp.XRPMotor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.Odometry;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 
 public class Drivetrain extends SubsystemBase {
+
   private static final double kGearRatio = (30.0 / 14.0) * (28.0 / 16.0) * (36.0 / 9.0) * (26.0 / 8.0); // 48.75:1
   private static final double kCountsPerMotorShaftRev = 12.0;
   private static final double kCountsPerRevolution = kCountsPerMotorShaftRev * kGearRatio; // 585.0
@@ -63,28 +65,26 @@ public class Drivetrain extends SubsystemBase {
     m_rightEncoder.setDistancePerPulse((Math.PI * kWheelDiameterInch) / kCountsPerRevolution);
     resetEncoders();
 
-    AutoBuilder.configureLTV(
-        this::getPose, // Robot pose supplier
-        this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
-        this::getAccelXPath, // Current ChassisSpeeds supplier
-        this::driveChassisSpeed, // Method that will drive the robot given ChassisSpeeds
-        0.02, // Robot control loop period in seconds. Default is 0.02
-        new ReplanningConfig(), // Default path replanning config. See the API for the options here
-        () -> {
-          // Boolean supplier that controls when the path will be mirrored for the red
-          // alliance
-          // This will flip the path being followed to the red side of the field.
-          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+        // Configure AutoBuilder last
+        AutoBuilder.configureRamsete(
+          this::getPose, // Robot pose supplier
+          this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+          this::getCurrentSpeeds, // Current ChassisSpeeds supplier
+          this::drive, // Method that will drive the robot given ChassisSpeeds
+          new ReplanningConfig(), // Default path replanning config. See the API for the options here
+          () -> {
+            // Boolean supplier that controls when the path will be mirrored for the red alliance
+            // This will flip the path being followed to the red side of the field.
+            // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-          var alliance = DriverStation.getAlliance();
-          if (alliance.isPresent()) {
-            return alliance.get() == DriverStation.Alliance.Red;
-          }
-          System.out.println("False");
-          return false;
-        },
-        this // Reference to this subsystem to set requirements
-    );
+            var alliance = DriverStation.getAlliance();
+            if (alliance.isPresent()) {
+              return alliance.get() == DriverStation.Alliance.Red;
+            }
+            return false;
+          },
+          this // Reference to this subsystem to set requirements
+  );
 
   }
 
@@ -180,9 +180,10 @@ public class Drivetrain extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     
+    
   }
 
-  // Returns the current pose as a Pose2d
+  // Initializes pose2d object
   Pose2d robotpose = new Pose2d();
 
   // Returns Pose2d of the robot
@@ -199,11 +200,9 @@ public class Drivetrain extends SubsystemBase {
   // Creates kinematics object: track width of 27 inches
  
 
-  private void driveChassisSpeed(ChassisSpeeds pathPlannerChassisSpeedsIn) {
+  private void drive(ChassisSpeeds pathPlannerChassisSpeedsIn) {
     DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.4148667);
     DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(pathPlannerChassisSpeedsIn);
-    
-    
     
 
     m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
@@ -213,7 +212,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   // Current ChassisSpeeds supplier
-  private ChassisSpeeds getAccelXPath() {
+  private ChassisSpeeds getCurrentSpeeds() {
     return new ChassisSpeeds(getAccelX(), 0, 0);
   }
 

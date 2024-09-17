@@ -50,6 +50,16 @@ public class Drivetrain extends SubsystemBase {
   // Set up the BuiltInAccelerometer
   private final BuiltInAccelerometer m_accelerometer = new BuiltInAccelerometer();
 
+  // Set up the angle for rotation 2D
+  public Rotation2d m_rotation2d = new Rotation2d(m_gyro.getAngleX());
+
+  // Set up the differential drive odometry
+  public DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(m_rotation2d, m_leftEncoder.getDistance(),
+      m_rightEncoder.getDistance());
+
+  // Set up pose2D
+  public Pose2d m_pose = new Pose2d(m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), m_rotation2d);
+
   /** Creates a new Drivetrain. */
   public Drivetrain() {
     SendableRegistry.addChild(m_diffDrive, m_leftMotor);
@@ -65,26 +75,27 @@ public class Drivetrain extends SubsystemBase {
     m_rightEncoder.setDistancePerPulse((Math.PI * kWheelDiameterInch) / kCountsPerRevolution);
     resetEncoders();
 
-        // Configure AutoBuilder last
-        AutoBuilder.configureRamsete(
-          this::getPose, // Robot pose supplier
-          this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
-          this::getCurrentSpeeds, // Current ChassisSpeeds supplier
-          this::drive, // Method that will drive the robot given ChassisSpeeds
-          new ReplanningConfig(), // Default path replanning config. See the API for the options here
-          () -> {
-            // Boolean supplier that controls when the path will be mirrored for the red alliance
-            // This will flip the path being followed to the red side of the field.
-            // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+    // Configure AutoBuilder last
+    AutoBuilder.configureRamsete(
+        this::getPose, // Robot pose supplier
+        this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+        this::getCurrentSpeeds, // Current ChassisSpeeds supplier
+        this::drive, // Method that will drive the robot given ChassisSpeeds
+        new ReplanningConfig(), // Default path replanning config. See the API for the options here
+        () -> {
+          // Boolean supplier that controls when the path will be mirrored for the red
+          // alliance
+          // This will flip the path being followed to the red side of the field.
+          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-            var alliance = DriverStation.getAlliance();
-            if (alliance.isPresent()) {
-              return alliance.get() == DriverStation.Alliance.Red;
-            }
-            return false;
-          },
-          this // Reference to this subsystem to set requirements
-  );
+          var alliance = DriverStation.getAlliance();
+          if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+          }
+          return false;
+        },
+        this // Reference to this subsystem to set requirements
+    );
 
   }
 
@@ -176,44 +187,45 @@ public class Drivetrain extends SubsystemBase {
     m_gyro.reset();
   }
 
+  public Rotation2d gyroAngle = new Rotation2d(m_gyro.getAngleX());
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    
-    
-  }
+    // Get the rotation of the robot from the gyro.
 
-  // Initializes pose2d object
-  Pose2d robotpose = new Pose2d();
+    // Update the pose
+    m_pose = m_odometry.update(m_rotation2d, m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+
+  }
 
   // Returns Pose2d of the robot
   public Pose2d getPose() {
-    return robotpose;
+
+    return m_odometry.getPoseMeters();
   }
 
   // Resets Pose2d of the robot
   public Pose2d resetPose(Pose2d pose) {
-    robotpose = new Pose2d();
-    return robotpose;
+
+    m_pose = new Pose2d();
+    return m_pose;
   }
 
   // Creates kinematics object: track width of 27 inches
- 
 
   private void drive(ChassisSpeeds pathPlannerChassisSpeedsIn) {
     DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.4148667);
     DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(pathPlannerChassisSpeedsIn);
-    
 
-    m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
-    m_rightMotor.set(wheelSpeeds.rightMetersPerSecond);
-    
-    
+    m_leftMotor.set(1);
+    m_rightMotor.set(1);
+
   }
 
   // Current ChassisSpeeds supplier
   private ChassisSpeeds getCurrentSpeeds() {
-    return new ChassisSpeeds(getAccelX(), 0, 0);
+    return new ChassisSpeeds(getAccelX(), getAccelY(), m_gyro.getRateY());
   }
 
 }

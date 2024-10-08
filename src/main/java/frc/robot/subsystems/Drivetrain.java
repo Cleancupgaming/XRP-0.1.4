@@ -19,8 +19,8 @@ import edu.wpi.first.wpilibj.xrp.XRPMotor;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
-import edu.wpi.first.math.kinematics.Odometry;
+/*import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.Odometry; */
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 
@@ -51,7 +51,7 @@ public class Drivetrain extends SubsystemBase {
   private final BuiltInAccelerometer m_accelerometer = new BuiltInAccelerometer();
 
   // Set up the angle for rotation 2D
-  public Rotation2d m_rotation2d = new Rotation2d(m_gyro.getAngleX());
+  public Rotation2d m_rotation2d = new Rotation2d(m_gyro.getAngleZ());
 
   // Set up the differential drive odometry
   public DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(m_rotation2d, m_leftEncoder.getDistance(),
@@ -60,6 +60,7 @@ public class Drivetrain extends SubsystemBase {
   // Set up pose2D
   public Pose2d m_pose = new Pose2d(m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), m_rotation2d);
 
+  
   /** Creates a new Drivetrain. */
   public Drivetrain() {
     SendableRegistry.addChild(m_diffDrive, m_leftMotor);
@@ -187,15 +188,17 @@ public class Drivetrain extends SubsystemBase {
     m_gyro.reset();
   }
 
-  public Rotation2d gyroAngle = new Rotation2d(m_gyro.getAngleX());
+  public Rotation2d gyroAngle = new Rotation2d(m_gyro.getAngleZ());
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     // Get the rotation of the robot from the gyro.
 
-    // Update the pose
-    m_pose = m_odometry.update(m_rotation2d, m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    // Update the odometry (this is a periodic function)
+    m_odometry.update(m_rotation2d, m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+
+    m_pose = m_odometry.getPoseMeters();
 
   }
 
@@ -218,8 +221,8 @@ public class Drivetrain extends SubsystemBase {
     DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(0.4148667);
     DifferentialDriveWheelSpeeds wheelSpeeds = kinematics.toWheelSpeeds(pathPlannerChassisSpeedsIn);
 
-    m_leftMotor.set(1);
-    m_rightMotor.set(1);
+    m_leftMotor.set(wheelSpeeds.leftMetersPerSecond);
+    m_rightMotor.set(wheelSpeeds.rightMetersPerSecond);
 
   }
 
